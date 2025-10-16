@@ -199,7 +199,27 @@
 //!
 //! Remember that C++ does name mangling so `extern "C"` might be required to enable Rust linker to find your functions.
 //!
-//! # CUDA C++ support
+//! # Fortran support
+//! 
+//! `cc-rs` supports Fortran libraries compilation by using the `fortran` method on `Build`:
+//!
+//! ```rust,no_run
+//! cc::Build::new()
+//!     .fortran(true)
+//!     .file("foo.f90")
+//!     .compile("foo");
+//! ```
+//! 
+//! Remember that Fortran does name mangling so `extern "C"` might be required to enable Rust linker to find your functions.
+//! In your Fortran source code, you can use the `bind(C, "symbol_name")` attribute to specify the exact symbol name.
+//! 
+//! ```fortran
+//! subroutine foo() bind(C, "foo")
+//!    ! Implementation here...
+//! end subroutine foo
+//! ```
+//!
+//! # CUDA C++ supports
 //!
 //! `cc-rs` also supports compiling CUDA C++ libraries by using the `cuda` method
 //! on `Build`:
@@ -345,6 +365,8 @@ mod tool;
 pub use tool::Tool;
 use tool::{CompilerFamilyLookupCache, ToolFamily};
 
+mod fortran_tool;
+
 mod tempfile;
 
 mod utilities;
@@ -423,6 +445,7 @@ pub struct Build {
     build_cache: Arc<BuildCache>,
     inherit_rustflags: bool,
     prefer_clang_cl_over_msvc: bool,
+    fortran: bool,
 }
 
 /// Represents the types of errors that may occur while using cc-rs.
@@ -552,6 +575,7 @@ impl Build {
             build_cache: Arc::default(),
             inherit_rustflags: true,
             prefer_clang_cl_over_msvc: false,
+            fortran: false,
         }
     }
 
@@ -1368,6 +1392,12 @@ impl Build {
     /// This option defaults to `false`.
     pub fn prefer_clang_cl_over_msvc(&mut self, prefer_clang_cl_over_msvc: bool) -> &mut Build {
         self.prefer_clang_cl_over_msvc = prefer_clang_cl_over_msvc;
+        self
+    }
+
+    /// Set Fortran support.
+    pub fn fortran(&mut self, fortran: bool) -> &mut Build {
+        self.fortran = fortran;
         self
     }
 
